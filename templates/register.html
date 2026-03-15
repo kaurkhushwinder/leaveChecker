@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Account</h2>
+<p class="small-text">Register to upload leaf images and view disease history.</p>
+
+{% if message %}
+    <p class="message">{{ message }}</p>
+{% endif %}
+
+<form method="post" action="/register">
+    <input type="text" name="name" placeholder="Enter your name" required>
+    <input type="email" name="email" placeholder="Enter your email" required>
+    <input type="password" name="password" placeholder="Enter your password" required>
+    <button type="submit">Register</button>
+</form>
+{% endblock %}

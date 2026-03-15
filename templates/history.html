@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Scan History</h2>
+
+{% if scans %}
+    {% for scan in scans %}
+        <div class="scan-card">
+            <p><strong>Disease:</strong> {{ scan.disease_result or "Pending" }}</p>
+            <p><strong>Treatment:</strong> {{ scan.treatment or "Pending" }}</p>
+            <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
+            <img src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
+            <p><a class="btn" href="/result/{{ scan.id }}">View Result</a></p>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="small-text">No scans found. Upload a leaf image to get started.</p>
+{% endif %}
+{% endblock %}

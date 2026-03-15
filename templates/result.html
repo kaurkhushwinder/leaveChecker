@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Prediction Result</h2>
+
+<div class="scan-card">
+    <p><strong>Disease:</strong> {{ scan.disease_result }}</p>
+    <p><strong>Treatment:</strong> {{ scan.treatment }}</p>
+    <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
+    <img class="result-image" src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
+</div>
+
+<div class="center-links">
+    <a class="btn" href="/upload">Upload Another</a>
+    <a class="btn" href="/history">View History</a>
+</div>
+{% endblock %}
