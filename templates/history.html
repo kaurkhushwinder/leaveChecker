@@ -8,6 +8,23 @@
         <div class="scan-card">
             <p><strong>Disease:</strong> {{ scan.disease_result or "Pending" }}</p>
             <p><strong>Treatment:</strong> {{ scan.treatment or "Pending" }}</p>
+            {% set guidance = guidance_by_scan_id.get(scan.id, {"symptoms": [], "solutions": []}) %}
+            {% if guidance.symptoms %}
+                <p><strong>Symptoms:</strong></p>
+                <ul>
+                    {% for symptom in guidance.symptoms %}
+                        <li>{{ symptom }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if guidance.solutions %}
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    {% for solution in guidance.solutions %}
+                        <li>{{ solution }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
             <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
             <img src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
             <p><a class="btn" href="/result/{{ scan.id }}">View Result</a></p>

@@ -1,7 +1,6 @@
 """Main FastAPI application for the AI Based Leaf Disease Detection System for Farmers."""
 
 import os
-import random
 import shutil
 from pathlib import Path
 
@@ -14,6 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.status import HTTP_302_FOUND
 
 from database import Base, SessionLocal, engine
+from model_service import predict_disease_from_image
 from models import LeafScan, User
 
 app = FastAPI(title="AI Based Leaf Disease Detection System for Farmers")
@@ -32,6 +32,69 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Automatically create database tables when the app starts.
 Base.metadata.create_all(bind=engine)
+
+DiseaseGuidance = dict[str, list[str]]
+
+DISEASE_GUIDANCE: dict[str, DiseaseGuidance] = {
+    "Leaf Spot": {
+        "symptoms": [
+            "Many small, circular, well-defined spots on the leaf surface.",
+            "Spots may have dark brown centers and yellow halos.",
+            "Lesions are mostly discrete instead of fully merged.",
+        ],
+        "solutions": [
+            "Remove and destroy infected leaves to reduce spread.",
+            "Avoid overhead irrigation and keep foliage dry.",
+            "Apply a broad-spectrum fungicide as per label instructions.",
+        ],
+    },
+    "Leaf Blight": {
+        "symptoms": [
+            "Large irregular brown patches spreading across leaf area.",
+            "Lesions merge and create large dead sections.",
+            "Rapid drying and blighting of affected leaves.",
+        ],
+        "solutions": [
+            "Prune heavily infected leaves and improve field sanitation.",
+            "Use copper-based fungicide at recommended intervals.",
+            "Improve spacing and airflow to reduce leaf wetness duration.",
+        ],
+    },
+    "Rust": {
+        "symptoms": [
+            "Raised rust-colored or orange-brown pustules on leaves.",
+            "Pustules may rupture and release powdery spores.",
+            "Spots can appear in clusters on both leaf surfaces.",
+        ],
+        "solutions": [
+            "Remove infected leaves and control volunteer host plants nearby.",
+            "Apply a rust-targeted fungicide early in disease development.",
+            "Improve ventilation and avoid long periods of leaf moisture.",
+        ],
+    },
+    "Powdery Mildew": {
+        "symptoms": [
+            "White to gray powdery growth on leaf surfaces.",
+            "Patchy coverage that may expand and merge over time.",
+            "Leaf curling or distortion in advanced infection.",
+        ],
+        "solutions": [
+            "Remove infected parts and avoid dense canopy conditions.",
+            "Apply sulfur spray or other mildew-specific fungicide.",
+            "Water at soil level and avoid wetting foliage late in the day.",
+        ],
+    },
+    "Healthy Leaf": {
+        "symptoms": [
+            "No clear disease lesions or abnormal fungal growth visible.",
+            "Leaf tissue is mostly uniform and green.",
+        ],
+        "solutions": [
+            "No treatment required at this stage.",
+            "Continue regular monitoring and preventive crop hygiene.",
+        ],
+    },
+}
 
 
 def get_db():
@@ -61,23 +124,12 @@ def login_required(request: Request) -> RedirectResponse | None:
     return None
 
 
-def predict_disease() -> tuple[str, str]:
-    """Return a random disease result and its treatment."""
+def get_guidance_for_disease(disease_name: str | None) -> DiseaseGuidance:
+    """Return symptom and solution guidance for a disease name."""
 
-    diseases = [
-        "Leaf Blight",
-        "Powdery Mildew",
-        "Healthy Leaf",
-    ]
-
-    treatments = {
-        "Leaf Blight": "Use copper-based fungicide.",
-        "Powdery Mildew": "Apply sulfur spray.",
-        "Healthy Leaf": "No treatment required.",
-    }
-
-    disease = random.choice(diseases)
-    return disease, treatments[disease]
+    if not disease_name:
+        return {"symptoms": [], "solutions": []}
+    return DISEASE_GUIDANCE.get(disease_name, {"symptoms": [], "solutions": []})
 
 
 @app.get("/")
@@ -236,7 +288,7 @@ def upload_leaf(
 
 @app.get("/predict/{scan_id}")
 def predict_scan(scan_id: int, request: Request, db: Session = Depends(get_db)):
-    """Generate a random disease result and save it for the scan."""
+    """Predict disease from the uploaded image and save it for the scan."""
 
     redirect_response = login_required(request)
     if redirect_response:
@@ -254,7 +306,8 @@ def predict_scan(scan_id: int, request: Request, db: Session = Depends(get_db)):
     if not scan:
         return RedirectResponse(url="/history", status_code=HTTP_302_FOUND)
 
-    disease, treatment = predict_disease()
+    full_image_path = STATIC_DIR / scan.image_path
+    disease, treatment = predict_disease_from_image(full_image_path)
     scan.disease_result = disease
     scan.treatment = treatment
     db.commit()
@@ -282,10 +335,11 @@ def result_page(scan_id: int, request: Request, db: Session = Depends(get_db)):
     if not scan:
         return RedirectResponse(url="/history", status_code=HTTP_302_FOUND)
 
+    guidance = get_guidance_for_disease(scan.disease_result)
     return templates.TemplateResponse(
         request,
         "result.html",
-        {"scan": scan, "is_logged_in": True},
+        {"scan": scan, "guidance": guidance, "is_logged_in": True},
     )
 
 
@@ -303,11 +357,14 @@ def history_page(request: Request, db: Session = Depends(get_db)):
         .order_by(LeafScan.date.desc())
         .all()
     )
+    guidance_by_scan_id = {
+        scan.id: get_guidance_for_disease(scan.disease_result) for scan in scans
+    }
 
     return templates.TemplateResponse(
         request,
         "history.html",
-        {"scans": scans, "is_logged_in": True},
+        {"scans": scans, "guidance_by_scan_id": guidance_by_scan_id, "is_logged_in": True},
     )
 
 
