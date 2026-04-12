@@ -1,19 +1,114 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Scan History</h2>
+
+<h2 style="margin-bottom:10px;">📊 Scan History</h2>
+<p class="small-text">View all your previous disease detection results.</p>
 
 {% if scans %}
-    {% for scan in scans %}
-        <div class="scan-card">
-            <p><strong>Disease:</strong> {{ scan.disease_result or "Pending" }}</p>
-            <p><strong>Treatment:</strong> {{ scan.treatment or "Pending" }}</p>
-            <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
-            <img src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
-            <p><a class="btn" href="/result/{{ scan.id }}">View Result</a></p>
-        </div>
-    {% endfor %}
+    <div class="history-grid">
+        {% for scan in scans %}
+            <div class="history-card">
+
+                <!-- IMAGE -->
+                <div class="image-box">
+                    <img src="{{ url_for('static', path=scan.image_path) }}" alt="Leaf Image">
+                </div>
+
+                <!-- DETAILS -->
+                <div class="details">
+                    <h3>🌿 {{ scan.disease_result or "Pending" }}</h3>
+                    
+                    <p><strong>💊 Treatment:</strong> {{ scan.treatment or "Pending" }}</p>
+                    
+                    <p class="date">
+                        📅 {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}
+                    </p>
+
+                    <a class="btn view-btn" href="/result/{{ scan.id }}">View Result</a>
+                </div>
+
+            </div>
+        {% endfor %}
+    </div>
+
 {% else %}
     <p class="small-text">No scans found. Upload a leaf image to get started.</p>
 {% endif %}
+
+<style>
+
+/* GRID */
+.history-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+/* CARD */
+.history-card {
+    display: flex;
+    gap: 20px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.history-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+}
+
+/* IMAGE */
+.image-box img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* DETAILS */
+.details {
+    flex: 1;
+}
+
+.details h3 {
+    margin-bottom: 8px;
+    color: #2f855a;
+}
+
+.details p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.date {
+    color: #6b7280;
+}
+
+/* BUTTON */
+.view-btn {
+    margin-top: 10px;
+    display: inline-block;
+}
+
+@media (max-width: 600px) {
+    .history-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .image-box img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+</style>
+
 {% endblock %}

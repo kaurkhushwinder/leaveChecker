@@ -1,12 +1,160 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Welcome, {{ user.name }}!</h2>
-<p class="small-text">Use the options below to upload a leaf image or check your previous scan results.</p>
+<style>
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 50px;
+        align-items: start;
+        padding-top: 30px;
+    }
 
-<div class="center-links">
-    <a class="btn" href="/upload">Upload Leaf</a>
-    <a class="btn" href="/history">View History</a>
-    <a class="btn" href="/logout">Logout</a>
+    /* Left Side: Welcome Text */
+    .welcome-section h1 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+
+    .welcome-section p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+        max-width: 400px;
+    }
+
+    /* Right Side: Action Cards */
+    .action-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        text-decoration: none;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateX(10px);
+        border-color: rgba(76, 175, 80, 0.5);
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(76, 175, 80, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #4CAF50;
+    }
+
+    .card-info h3 {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+
+    .card-info p {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Chat Assistant Box */
+    .ai-box {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 20px;
+        margin-top: 10px;
+    }
+
+    .chat-input-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .chat-input-group input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 10px;
+        color: white;
+        outline: none;
+    }
+
+    .btn-send {
+        background: #4CAF50;
+        border: none;
+        padding: 0 20px;
+        border-radius: 10px;
+        color: white;
+        cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+        .dashboard-container { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="welcome-section">
+        <h1>👋 Welcome,<br><span style="color: #4CAF50;">khushwinder kaur!</span></h1>
+        <p>Manage your scans, upload new leaf images, and track disease detection easily.</p>
+        
+        <div style="margin-top: 40px; opacity: 0.3;">
+             <i class="fas fa-seedling" style="font-size: 8rem; color: #4CAF50;"></i>
+        </div>
+    </div>
+
+    <div class="action-cards">
+        <a href="/upload" class="card">
+            <div class="card-icon"><i class="fas fa-camera"></i></div>
+            <div class="card-info">
+                <h3>Upload Leaf</h3>
+                <p>Upload a new image and detect disease instantly.</p>
+            </div>
+        </a>
+
+        <a href="/history" class="card">
+            <div class="card-icon"><i class="fas fa-history"></i></div>
+            <div class="card-info">
+                <h3>View History</h3>
+                <p>Check your previous scan results and reports.</p>
+            </div>
+        </a>
+
+        <div class="card ai-box" style="display: block; cursor: default;">
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div class="card-icon" style="background: rgba(155, 89, 182, 0.2); color: #9b59b6;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="card-info">
+                    <h3>AI Assistant</h3>
+                    <p>Ask anything about plant health.</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-group">
+                <input type="text" placeholder="Type your message...">
+                <button class="btn-send"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -3,111 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaf Disease Detection</title>
+    <title>Leaf AI Detector | Smart Plant Care</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f7f2;
-            color: #1f2937;
+        :root {
+            --primary-green: #4CAF50;
+            --dark-green: #2E7D32;
+            --accent-glow: rgba(76, 175, 80, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --danger: #ff4444;
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 🌿 ANIMATED FLOATING LEAVES */
+        .leaves-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .leaves-container span {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: url("https://www.svgrepo.com/show/475670/leaf.svg") no-repeat center;
+            background-size: contain;
+            opacity: 0.1;
+            filter: drop-shadow(0 0 5px var(--primary-green));
+            animation: float-fall 15s linear infinite;
+        }
+
+        @keyframes float-fall {
+            0% { top: -10%; transform: translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { top: 110%; transform: translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        .leaves-container span:nth-child(1) { left: 5%; animation-delay: 0s; }
+        .leaves-container span:nth-child(2) { left: 25%; animation-delay: 4s; }
+        .leaves-container span:nth-child(3) { left: 45%; animation-delay: 8s; }
+        .leaves-container span:nth-child(4) { left: 70%; animation-delay: 2s; }
+        .leaves-container span:nth-child(5) { left: 85%; animation-delay: 6s; }
+
+        /* 🔥 MODERN NAVBAR */
         .navbar {
-            background: #2f855a;
-            color: white;
-            padding: 15px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 1.2rem 8%;
+            background: rgba(15, 32, 39, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .navbar a {
-            color: white;
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 700;
             text-decoration: none;
-            margin-left: 15px;
-            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .container {
-            max-width: 800px;
+
+        .logo span { color: var(--primary-green); }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .btn-auth {
+            padding: 10px 24px;
+            background: var(--primary-green);
+            color: white !important;
+            border-radius: 12px;
+            font-weight: 600 !important;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+            background: #45a049;
+        }
+
+        .btn-logout {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger) !important;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white !important;
+        }
+
+        /* 📦 MAIN CONTAINER */
+        .main-wrapper {
+            flex: 1;
+            max-width: 1200px;
             margin: 40px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            padding: 0 20px;
+            width: 100%;
+            animation: pageFadeIn 0.6s ease-out;
         }
-        h1, h2, h3 {
-            text-align: center;
+
+        @keyframes pageFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="file"] {
-            padding: 12px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-        }
-        button, .btn {
-            background: #2f855a;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        button:hover, .btn:hover {
-            background: #276749;
-        }
-        .message {
-            color: #c53030;
-            text-align: center;
-        }
-        .center-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        .scan-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+
+        /* Flash Messages Style */
+        .alert {
             padding: 15px;
-            margin-bottom: 15px;
-            background: #f9fafb;
-        }
-        .scan-card img, .result-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        .small-text {
-            color: #4a5568;
+            border-radius: 10px;
+            margin-bottom: 25px;
             text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.4);
+            border-top: 1px solid var(--glass-border);
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 1rem 5%; }
+            .nav-links { gap: 15px; }
+            .nav-links span { display: none; } /* Chote screen par text hide karein, sirf icons dikhen */
         }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <div><strong>Leaf Disease Detection System</strong></div>
-        <div>
-            {% if is_logged_in %}
-                <a href="/dashboard">Dashboard</a>
-                <a href="/logout">Logout</a>
-            {% else %}
-                <a href="/login">Login</a>
-                <a href="/register">Register</a>
-            {% endif %}
-        </div>
+
+    <div class="leaves-container">
+        <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <div class="container">
-        {% block content %}{% endblock %}
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <i class="fas fa-leaf" style="color: var(--primary-green);"></i>
+            LEAF<span>AI</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> <span>Home</span></a>
+            
+            {% if is_logged_in %}
+                <a href="/dashboard"><i class="fas fa-th-large"></i> <span>Dashboard</span></a>
+                <a href="/history"><i class="fas fa-history"></i> <span>History</span></a>
+                <a href="/logout" class="btn-auth btn-logout">Logout</a>
+            {% else %}
+                <a href="/login"><i class="fas fa-sign-in-alt"></i> <span>Login</span></a>
+                <a href="/register" class="btn-auth">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        {% if message %}
+            <div class="alert">
+                <i class="fas fa-info-circle"></i> {{ message }}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
     </div>
+
+    <footer>
+        <p>&copy; 2026 Leaf AI Detector | Smart Disease Identification System</p>
+        <div style="margin-top: 10px;">
+            <i class="fab fa-github" style="margin: 0 10px; cursor: pointer;"></i>
+            <i class="fab fa-linkedin" style="margin: 0 10px; cursor: pointer;"></i>
+        </div>
+    </footer>
+
 </body>
 </html>

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* Professional Header Section */
+    .tips-header { 
+        text-align: center; 
+        margin-bottom: 50px; 
+        animation: fadeIn 1s ease-in;
+    }
+    
+    .search-box {
+        max-width: 500px;
+        margin: 20px auto;
+        position: relative;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 15px 25px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+        color: white;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    .search-box input:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+    }
+
+    /* Grid Layout */
+    .tips-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+        gap: 25px; 
+    }
+
+    /* Upgraded Card Design */
+    .tip-card { 
+        background: rgba(255, 255, 255, 0.03); 
+        backdrop-filter: blur(15px);
+        padding: 30px; 
+        border-radius: 24px; 
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+    }
+
+    .tip-card:hover { 
+        transform: translateY(-10px);
+        border-color: #4CAF50;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tip-category {
+        font-size: 0.8rem;
+        color: #4CAF50;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .tip-card i { 
+        font-size: 2.5rem; 
+        margin-bottom: 20px;
+        background: linear-gradient(to right, #4CAF50, #81C784);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+
+<div class="tips-header">
+    <h1 style="font-size: 3rem; font-weight: 800;">Precision <span style="color: #4CAF50;">AI Tips</span></h1>
+    <p style="opacity: 0.7;">Eco-friendly farming solutions based on deep learning research.</p>
+    
+    <div class="search-box">
+        <input type="text" id="tipSearch" placeholder="Search tips (e.g. Potato, Soil, Neem)...">
+    </div>
+</div>
+
+<div class="tips-grid" id="tipsGrid">
+    <div class="tip-card" data-search="natural pesticide neem oil aphids fungus">
+        <span class="tip-category">Pest Control</span>
+        <i class="fas fa-bug"></i>
+        <h3>Organic Neem Shield</h3>
+        <p style="opacity: 0.6; line-height: 1.6;">Mix 2 teaspoons of Neem oil with 1 teaspoon of mild soap in 1 liter of water. This kills aphids and mites without damaging the environment.</p>
+    </div>
+
+    <div class="tip-card" data-search="watering morning schedule moisture fungus">
+        <span class="tip-category">Irrigation</span>
+        <i class="fas fa-tint"></i>
+        <h3>Morning Hydration</h3>
+        <p style="opacity: 0.6; line-height: 1.6;">Water your crops before 8:00 AM. This prevents moisture from staying on leaves overnight, reducing fungal risk by 40%.</p>
+    </div>
+
+    <div class="tip-card" data-search="compost fertilizer soil eggshells calcium">
+        <span class="tip-category">Soil Nutrition</span>
+        <i class="fas fa-seedling"></i>
+        <h3>Calcium Boost</h3>
+        <p style="opacity: 0.6; line-height: 1.6;">Use crushed eggshells in the soil for Tomato and Pepper plants. It provides a slow-release calcium boost that prevents blossom end rot.</p>
+    </div>
+    
+    <div class="tip-card" data-search="banana peel potassium fertilizer growth">
+        <span class="tip-category">Fertilizer</span>
+        <i class="fas fa-recycle"></i>
+        <h3>Potassium Tea</h3>
+        <p style="opacity: 0.6; line-height: 1.6;">Soak banana peels in water for 48 hours. This liquid is rich in potassium and helps in rapid fruit growth and healthy roots.</p>
+    </div>
+</div>
+
+<script>
+    // Real-time search functionality
+    document.getElementById('tipSearch').addEventListener('input', function(e) {
+        let filter = e.target.value.toLowerCase();
+        let cards = document.querySelectorAll('.tip-card');
+        
+        cards.forEach(card => {
+            let keywords = card.getAttribute('data-search');
+            if(keywords.includes(filter)) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+</script>
+{% endblock %}

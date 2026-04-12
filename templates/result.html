@@ -1,17 +1,44 @@
 {% extends "base.html" %}
-
 {% block content %}
-<h2>Prediction Result</h2>
+<style>
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+    .card { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    .leaf-img { width: 100%; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+    .badge { padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; background: #4CAF50; color: white; }
+    .conf-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+    .conf-bar-fill { background: linear-gradient(90deg, #4CAF50, #8BC34A); height: 100%; transition: 1s ease-out; }
+    .treatment-item { margin-top: 15px; padding-left: 15px; border-left: 3px solid #4CAF50; }
+</style>
 
-<div class="scan-card">
-    <p><strong>Disease:</strong> {{ scan.disease_result }}</p>
-    <p><strong>Treatment:</strong> {{ scan.treatment }}</p>
-    <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
-    <img class="result-image" src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
-</div>
+<div class="container">
+    <h2 style="color: #4CAF50;">🔍 Diagnosis Report</h2>
+    
+    <div class="result-grid">
+        <div class="card">
+            <img src="/static/{{ scan.image_path }}" class="leaf-img">
+            <div style="margin-top: 20px;">
+                <span class="badge">AI ANALYSIS</span>
+                <h3 style="margin: 10px 0;">{{ clean_disease }}</h3>
+                <p>AI Confidence Score:</p>
+                <div class="conf-bar-bg">
+                    <div class="conf-bar-fill" style="width: {{ confidence }}%;"></div>
+                </div>
+                <p style="text-align: right; font-weight: bold; color: #4CAF50;">{{ confidence }}% Sure</p>
+            </div>
+        </div>
 
-<div class="center-links">
-    <a class="btn" href="/upload">Upload Another</a>
-    <a class="btn" href="/history">View History</a>
+        <div class="card">
+            <h3>💊 Recommended Care</h3>
+            <div class="treatment-item">
+                <strong style="color: #8BC34A;">Plan of Action:</strong>
+                <p style="opacity: 0.8; line-height: 1.6;">{{ scan.treatment }}</p>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <a href="/upload" class="btn-scan" style="display: block; text-align: center; background: #4CAF50; padding: 15px; border-radius: 12px; text-decoration: none; color: white; font-weight: bold;">Scan Another Plant</a>
+                <a href="/history" style="display: block; text-align: center; margin-top: 15px; color: rgba(255,255,255,0.6); text-decoration: none;">View History</a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
