@@ -1,33 +1,175 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Prediction Result</h2>
+<style>
+    .result-shell {
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        gap: 26px;
+    }
 
-<div class="scan-card">
-    <p><strong>Disease:</strong> {{ scan.disease_result }}</p>
-    <p><strong>Treatment:</strong> {{ scan.treatment }}</p>
-    {% if guidance.symptoms %}
-        <p><strong>Symptoms:</strong></p>
-        <ul>
-            {% for symptom in guidance.symptoms %}
-                <li>{{ symptom }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    {% if guidance.solutions %}
-        <p><strong>Solutions:</strong></p>
-        <ul>
-            {% for solution in guidance.solutions %}
-                <li>{{ solution }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
-    <img class="result-image" src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
-</div>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 20px 35px rgba(5, 15, 20, 0.25);
+    }
 
-<div class="center-links">
-    <a class="btn" href="/upload">Upload Another</a>
-    <a class="btn" href="/history">View History</a>
+    .image-card {
+        padding: 14px;
+    }
+
+    .result-image {
+        width: 100%;
+        height: 100%;
+        max-height: 520px;
+        object-fit: cover;
+        border-radius: 14px;
+        display: block;
+    }
+
+    .details-card {
+        padding: 24px;
+    }
+
+    .result-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 2rem;
+        margin-bottom: 16px;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid rgba(76, 175, 80, 0.6);
+        color: #b9fbc0;
+        background: rgba(76, 175, 80, 0.16);
+        margin-bottom: 10px;
+    }
+
+    .meta-line {
+        margin-bottom: 12px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.92);
+    }
+
+    .meta-line strong {
+        color: #ffffff;
+    }
+
+    .section-block {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+        margin-bottom: 10px;
+        color: #c8ffd0;
+        font-size: 1rem;
+    }
+
+    .bullet-list {
+        margin-left: 18px;
+        display: grid;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .action-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .action-btn.primary {
+        color: #fff;
+        background: linear-gradient(135deg, #39b54a, #2e8d3a);
+        box-shadow: 0 8px 20px rgba(57, 181, 74, 0.35);
+    }
+
+    .action-btn.secondary {
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 980px) {
+        .result-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .result-title {
+            font-size: 1.7rem;
+        }
+    }
+</style>
+
+<div class="result-shell">
+    <div class="glass-card image-card">
+        <img class="result-image" src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
+    </div>
+
+    <div class="glass-card details-card">
+        <h2 class="result-title"><i class="fas fa-flask"></i> Prediction Result</h2>
+
+        <div class="chip">Diagnosis Summary</div>
+        <p class="meta-line"><strong>Disease:</strong> {{ scan.disease_result }}</p>
+        <p class="meta-line"><strong>Treatment:</strong> {{ scan.treatment }}</p>
+        <p class="meta-line"><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
+
+        {% if guidance.symptoms %}
+            <div class="section-block">
+                <h3 class="section-title"><i class="fas fa-stethoscope"></i> Symptoms</h3>
+                <ul class="bullet-list">
+                    {% for symptom in guidance.symptoms %}
+                        <li>{{ symptom }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if guidance.solutions %}
+            <div class="section-block">
+                <h3 class="section-title"><i class="fas fa-seedling"></i> Solutions</h3>
+                <ul class="bullet-list">
+                    {% for solution in guidance.solutions %}
+                        <li>{{ solution }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="action-row">
+            <a class="action-btn primary" href="/upload"><i class="fas fa-upload"></i> Upload Another</a>
+            <a class="action-btn secondary" href="/history"><i class="fas fa-clock-rotate-left"></i> View History</a>
+        </div>
+    </div>
 </div>
 {% endblock %}

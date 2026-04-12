@@ -17,20 +17,18 @@ from model_service import predict_disease_from_image
 from models import LeafScan, User
 
 app = FastAPI(title="AI Based Leaf Disease Detection System for Farmers")
-app.add_middleware(SessionMiddleware, secret_key="supersecretkey")
+app.add_middleware(SessionMiddleware, secret_key="leaf-checker-super-secret")
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 UPLOADS_DIR = STATIC_DIR / "uploads"
 
-# Create the upload folder automatically if it does not exist.
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Automatically create database tables when the app starts.
 Base.metadata.create_all(bind=engine)
 
 DiseaseGuidance = dict[str, list[str]]
@@ -162,7 +160,21 @@ def register_user(
 ):
     """Save a new user to the database."""
 
-    existing_user = db.query(User).filter(User.email == email).first()
+    clean_name = name.strip()
+    clean_email = email.strip().lower()
+    clean_password = password.strip()
+
+    if not clean_name or not clean_email or not clean_password:
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {
+                "message": "Name, email, and password are required.",
+                "is_logged_in": False,
+            },
+        )
+
+    existing_user = db.query(User).filter(User.email == clean_email).first()
     if existing_user:
         return templates.TemplateResponse(
             request,
@@ -173,7 +185,7 @@ def register_user(
             },
         )
 
-    new_user = User(name=name, email=email, password=password)
+    new_user = User(name=clean_name, email=clean_email, password=clean_password)
     db.add(new_user)
     db.commit()
 
@@ -198,9 +210,15 @@ def login_user(
     password: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    """Check the email and password and store user_id in the session."""
+    """Check credentials and store user_id in the session."""
 
-    user = db.query(User).filter(User.email == email, User.password == password).first()
+    clean_email = email.strip().lower()
+    clean_password = password.strip()
+    user = (
+        db.query(User)
+        .filter(User.email == clean_email, User.password == clean_password)
+        .first()
+    )
 
     if not user:
         return templates.TemplateResponse(
@@ -253,7 +271,7 @@ def upload_leaf(
     leaf_image: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    """Save the uploaded image and create a scan record."""
+    """Save uploaded image and create a scan record."""
 
     redirect_response = login_required(request)
     if redirect_response:
@@ -263,7 +281,6 @@ def upload_leaf(
     safe_filename = os.path.basename(filename)
     file_path = UPLOADS_DIR / safe_filename
 
-    # Add a number to the filename if the same name already exists.
     if file_path.exists():
         file_stem = file_path.stem
         file_suffix = file_path.suffix
@@ -288,7 +305,7 @@ def upload_leaf(
 
 @app.get("/predict/{scan_id}")
 def predict_scan(scan_id: int, request: Request, db: Session = Depends(get_db)):
-    """Predict disease from the uploaded image and save it for the scan."""
+    """Predict disease from uploaded image and save result."""
 
     redirect_response = login_required(request)
     if redirect_response:
@@ -317,7 +334,7 @@ def predict_scan(scan_id: int, request: Request, db: Session = Depends(get_db)):
 
 @app.get("/result/{scan_id}")
 def result_page(scan_id: int, request: Request, db: Session = Depends(get_db)):
-    """Show the image, disease result, and treatment."""
+    """Show the image, disease result, treatment, and guidance."""
 
     redirect_response = login_required(request)
     if redirect_response:
@@ -345,7 +362,7 @@ def result_page(scan_id: int, request: Request, db: Session = Depends(get_db)):
 
 @app.get("/history")
 def history_page(request: Request, db: Session = Depends(get_db)):
-    """Show all previous scans of the logged-in user."""
+    """Show all scans of the logged-in user."""
 
     redirect_response = login_required(request)
     if redirect_response:
@@ -364,13 +381,28 @@ def history_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request,
         "history.html",
-        {"scans": scans, "guidance_by_scan_id": guidance_by_scan_id, "is_logged_in": True},
+        {
+            "scans": scans,
+            "guidance_by_scan_id": guidance_by_scan_id,
+            "is_logged_in": True,
+        },
+    )
+
+
+@app.get("/tips")
+def get_tips(request: Request):
+    """Show generic farming tips page."""
+
+    return templates.TemplateResponse(
+        request,
+        "tips.html",
+        {"is_logged_in": "user_id" in request.session},
     )
 
 
 @app.get("/logout")
 def logout(request: Request):
-    """Clear session data and send the user to the login page."""
+    """Clear session and redirect to login."""
 
     request.session.clear()
     return RedirectResponse(url="/login", status_code=HTTP_302_FOUND)
