@@ -66,7 +66,7 @@ def test_registration_login_upload_prediction_history_and_logout():
         },
         follow_redirects=False,
     )
-    assert response.status_code == 302
+    assert response.status_code == 303
     assert response.headers["location"] == "/login"
 
     db = SessionLocal()
@@ -81,7 +81,7 @@ def test_registration_login_upload_prediction_history_and_logout():
         data={"email": "farmer@example.com", "password": "12345"},
         follow_redirects=False,
     )
-    assert response.status_code == 302
+    assert response.status_code == 303
     assert response.headers["location"] == "/dashboard"
 
     response = client.get("/dashboard")

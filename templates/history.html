@@ -1,39 +1,282 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Scan History</h2>
+<style>
+    .history-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
 
-{% if scans %}
-    {% for scan in scans %}
-        {% set guidance = guidance_by_scan_id.get(scan.id, {"symptoms": [], "solutions": []}) %}
-        <div class="scan-card">
-            <p><strong>Disease:</strong> {{ scan.disease_result or "Pending" }}</p>
-            <p><strong>Treatment:</strong> {{ scan.treatment or "Pending" }}</p>
+    .history-title {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
 
-            {% if guidance.symptoms %}
-                <p><strong>Symptoms:</strong></p>
-                <ul>
-                    {% for symptom in guidance.symptoms %}
-                        <li>{{ symptom }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
+    .history-subtitle {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.95rem;
+        margin-top: 6px;
+    }
 
-            {% if guidance.solutions %}
-                <p><strong>Solutions:</strong></p>
-                <ul>
-                    {% for solution in guidance.solutions %}
-                        <li>{{ solution }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
+    .history-chip {
+        background: rgba(76, 175, 80, 0.14);
+        border: 1px solid rgba(76, 175, 80, 0.35);
+        color: #9df1a1;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 999px;
+        padding: 7px 12px;
+    }
 
-            <p><strong>Date:</strong> {{ scan.date.strftime("%d-%m-%Y %H:%M:%S") }}</p>
-            <img src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image">
-            <p><a class="btn" href="/result/{{ scan.id }}">View Result</a></p>
+    .history-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    }
+
+    .scan-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(160deg, rgba(20, 45, 54, 0.92), rgba(18, 37, 45, 0.86));
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+    }
+
+    .scan-image-wrap {
+        position: relative;
+        aspect-ratio: 16 / 8;
+        max-height: 220px;
+        overflow: hidden;
+    }
+
+    .scan-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.35s ease;
+    }
+
+    .scan-card:hover .scan-image-wrap img {
+        transform: scale(1.04);
+    }
+
+    .disease-badge {
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        background: rgba(6, 16, 23, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        color: #d7ffe0;
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 6px 10px;
+    }
+
+    .scan-content {
+        padding: 14px 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+    }
+
+    .scan-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .scan-treatment {
+        color: #eefcf1;
+        line-height: 1.45;
+        font-size: 0.92rem;
+    }
+
+    .scan-section-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #9dd6eb;
+        margin-bottom: 6px;
+    }
+
+    .tag-list {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .tag {
+        border-radius: 999px;
+        font-size: 0.78rem;
+        padding: 5px 10px;
+        line-height: 1.2;
+        border: 1px solid transparent;
+    }
+
+    .tag-symptom {
+        color: #ffe2b0;
+        background: rgba(255, 167, 38, 0.14);
+        border-color: rgba(255, 167, 38, 0.4);
+    }
+
+    .tag-solution {
+        color: #b8f8be;
+        background: rgba(76, 175, 80, 0.16);
+        border-color: rgba(76, 175, 80, 0.42);
+    }
+
+    .scan-actions {
+        margin-top: auto;
+        padding-top: 8px;
+    }
+
+    .scan-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+        text-decoration: none;
+        background: linear-gradient(135deg, #3aa955, #2d8a44);
+        border: 1px solid rgba(120, 225, 140, 0.5);
+        border-radius: 10px;
+        padding: 9px 13px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .scan-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(50, 157, 78, 0.32);
+    }
+
+    .empty-state {
+        border: 1px dashed rgba(255, 255, 255, 0.25);
+        border-radius: 18px;
+        text-align: center;
+        padding: 48px 20px;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .empty-state h3 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 16px;
+    }
+
+    .empty-state a {
+        color: #a6ffbe;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .empty-state a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 650px) {
+        .history-title {
+            font-size: 1.6rem;
+        }
+
+        .scan-image-wrap {
+            aspect-ratio: 16 / 9;
+            max-height: 180px;
+        }
+
+        .scan-content {
+            padding: 12px;
+        }
+    }
+</style>
+
+<section>
+    <div class="history-header">
+        <div>
+            <h2 class="history-title">Scan History</h2>
+            <p class="history-subtitle">Review previous detections, symptoms, and treatments in one place.</p>
         </div>
-    {% endfor %}
-{% else %}
-    <p class="small-text">No scans found. Upload a leaf image to get started.</p>
-{% endif %}
+        <span class="history-chip">{{ scans|length }} record{% if scans|length != 1 %}s{% endif %}</span>
+    </div>
+
+    {% if scans %}
+        <div class="history-grid">
+            {% for scan in scans %}
+                {% set guidance = guidance_by_scan_id.get(scan.id, {"symptoms": [], "solutions": []}) %}
+                <article class="scan-card">
+                    <div class="scan-image-wrap">
+                        <img src="{{ url_for('static', path=scan.image_path) }}" alt="Uploaded leaf image for {{ scan.disease_result or 'pending diagnosis' }}">
+                        <span class="disease-badge">{{ scan.disease_result or "Pending" }}</span>
+                    </div>
+
+                    <div class="scan-content">
+                        <div class="scan-meta">
+                            <span><i class="fas fa-calendar-alt"></i> {{ scan.date.strftime("%d %b %Y") }}</span>
+                            <span>{{ scan.date.strftime("%I:%M %p") }}</span>
+                        </div>
+
+                        <div>
+                            <p class="scan-section-title">Treatment</p>
+                            <p class="scan-treatment">{{ scan.treatment or "No treatment available yet." }}</p>
+                        </div>
+
+                        {% if guidance.symptoms %}
+                            <div>
+                                <p class="scan-section-title">Symptoms</p>
+                                <div class="tag-list">
+                                    {% for symptom in guidance.symptoms %}
+                                        <span class="tag tag-symptom">{{ symptom }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if guidance.solutions %}
+                            <div>
+                                <p class="scan-section-title">Solutions</p>
+                                <div class="tag-list">
+                                    {% for solution in guidance.solutions %}
+                                        <span class="tag tag-solution">{{ solution }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="scan-actions">
+                            <a class="scan-link" href="/result/{{ scan.id }}">
+                                <i class="fas fa-up-right-from-square"></i>
+                                View Full Result
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No scans yet</h3>
+            <p>Upload your first leaf image to start building your disease history.</p>
+            <a href="/upload">Go to Upload</a>
+        </div>
+    {% endif %}
+</section>
 {% endblock %}

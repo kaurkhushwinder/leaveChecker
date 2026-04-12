@@ -8,9 +8,11 @@ from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.status import HTTP_302_FOUND
+from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 
 from database import Base, SessionLocal, engine
 from model_service import predict_disease_from_image
@@ -174,7 +176,9 @@ def register_user(
             },
         )
 
-    existing_user = db.query(User).filter(User.email == clean_email).first()
+    existing_user = (
+        db.query(User).filter(func.lower(User.email) == clean_email).first()
+    )
     if existing_user:
         return templates.TemplateResponse(
             request,
@@ -187,9 +191,20 @@ def register_user(
 
     new_user = User(name=clean_name, email=clean_email, password=clean_password)
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {
+                "message": "Email already registered. Please use another email.",
+                "is_logged_in": False,
+            },
+        )
 
-    return RedirectResponse(url="/login", status_code=HTTP_302_FOUND)
+    return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
 
 
 @app.get("/login")
@@ -216,7 +231,10 @@ def login_user(
     clean_password = password.strip()
     user = (
         db.query(User)
-        .filter(User.email == clean_email, User.password == clean_password)
+        .filter(
+            func.lower(User.email) == clean_email,
+            User.password == clean_password,
+        )
         .first()
     )
 
@@ -231,7 +249,7 @@ def login_user(
         )
 
     request.session["user_id"] = user.id
-    return RedirectResponse(url="/dashboard", status_code=HTTP_302_FOUND)
+    return RedirectResponse(url="/dashboard", status_code=HTTP_303_SEE_OTHER)
 
 
 @app.get("/dashboard")
